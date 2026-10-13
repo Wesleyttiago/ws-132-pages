@@ -1,5 +1,5 @@
 const photos: Item[] = [];
-export const collections = ["transactions", "goals", "tasks", "memories", "songs", "albums", "weddingTasks", "weddingCosts", "suppliers", "guests", "weddingPlan"] as const;
+export const collections = ["transactions", "goals", "tasks", "memories", "songs", "albums", "weddingTasks", "weddingCosts", "suppliers", "guests", "weddingPlan", "inspirationBoards"] as const;
 export type Collection = (typeof collections)[number];
 export type Item = { id: string; collection: Collection; revision: number; [key: string]: unknown };
 export type Settings = { title: string; person1: string; person2: string; weddingDate: string; openingCents: number; targetCents: number; monthlyCents: number; entryAutoplay: boolean; entrySongId: string; albumAutoplay: boolean; albumSongId: string; revision: number };

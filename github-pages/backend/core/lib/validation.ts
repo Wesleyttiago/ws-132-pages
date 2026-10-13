@@ -1,5 +1,6 @@
 import { collections, validDate, musicUrl, type Item, type Settings } from "./model";
 import { taskStages, taskPeriods, paymentStages, rsvpStages, contractUrlAllowed } from "./business";
+import { pinterestPinUrl, pinterestBoardUrl, inspirationCategories } from "./pinterest";
 export class InputError extends Error { constructor(message: string, public status = 400) { super(message); } }
 function str(v: unknown, label: string, max: number, required = false): string { if (typeof v !== "string" || v.length > max || (required && !v.trim())) throw new InputError("Confira o campo " + label + "."); return v.trim(); }
 function cents(v: unknown, label: string, positive = false): number { if (typeof v !== "number" || !Number.isSafeInteger(v) || v < (positive ? 1 : 0) || v > 10000000000) throw new InputError("Informe um valor válido em " + label + "."); return v; }
@@ -13,7 +14,11 @@ export function cleanItem(v: Record<string, unknown>): Item {
   if (!/^[a-zA-Z0-9-]+$/.test(i.id) || !Number.isSafeInteger(i.revision) || i.revision < 0) throw new InputError("Registro inválido.");
   const note = str(v.note ?? "", "observação", 1000);
   if (i.collection !== "songs" && !validDate(v.date ?? "", i.collection === "transactions")) throw new InputError("Confira a data.");
-  if (i.collection === "weddingPlan") {
+  if (i.collection === "inspirationBoards") {
+    const url=pinterestBoardUrl(v.url);if(!url)throw new InputError("Use o link completo de uma pasta pública do Pinterest.");
+    if(!inspirationCategories.some(category=>category.id===v.category))throw new InputError("Escolha o tema desta pasta.");
+    Object.assign(i,{title:str(v.title,"nome da pasta",100,true),url,category:v.category,note});
+  } else if (i.collection === "weddingPlan") {
     if (i.id !== "wedding-plan") throw new InputError("Planejamento inválido.");
     Object.assign(i, {budgetCents:cents(v.budgetCents,"orçamento total"),note});
   } else if (i.collection === "weddingTasks") {
@@ -46,9 +51,9 @@ export function cleanItem(v: Record<string, unknown>): Item {
     if (!["todo", "doing", "done"].includes(String(v.status))) throw new InputError("Escolha uma etapa.");
     Object.assign(i, { title: str(v.title, "tarefa", 180, true), date: v.date ?? "", status: v.status, person: str(v.person ?? "Nós", "responsável", 45, true), category: str(v.category ?? "Apartamento", "categoria", 40), note });
   } else if (i.collection === "memories") {
-    const url = str(v.url, "foto", 200, true);
-    if (!/^\/(?:photos\/[a-f0-9]+\.(?:jpg|webp)|api\/media\/[a-zA-Z0-9-]+)$/.test(url)) throw new InputError("Foto inválida.");
-    Object.assign(i, { albumId: str(v.albumId ?? "album-love", "álbum", 100, true), url, caption: str(v.caption ?? "", "legenda", 1000), date: v.date ?? "", favorite: v.favorite === true, width: Number(v.width ?? 0), height: Number(v.height ?? 0) });
+    const raw = str(v.url, "foto ou referência", 600, true),pin=pinterestPinUrl(raw),url=pin??raw;
+    if (!pin&&!/^\/(?:photos\/[a-f0-9]+\.(?:jpg|webp)|api\/media\/[a-zA-Z0-9-]+)$/.test(url)) throw new InputError("Use uma foto enviada ou um link completo de Pin do Pinterest.");
+    Object.assign(i, { albumId: str(v.albumId ?? "album-love", "álbum", 100, true), url, sourceType:pin?"pinterest":"photo", caption: str(v.caption ?? "", "legenda", 1000), date: v.date ?? "", favorite: v.favorite === true, width: pin?0:Number(v.width ?? 0), height: pin?0:Number(v.height ?? 0) });
   } else {
     if (!musicUrl(v.url)) throw new InputError("Use um link de música ou playlist do YouTube ou Spotify.");
     Object.assign(i, { title: str(v.title, "música", 140, true), artist: str(v.artist ?? "", "artista", 100), url: v.url, note });
@@ -68,4 +73,5 @@ export function validatePlacement(items: Item[], item: Item) {
     if (!parent || parent.parentId || parent.id === item.id) throw new InputError("Escolha um álbum principal válido.");
   }
   if (item.collection === "memories" && !items.some(a => a.id === item.albumId && a.collection === "albums")) throw new InputError("Escolha um álbum válido para essa foto.");
+  if(item.collection==="memories"&&pinterestPinUrl(item.url)&&items.some(existing=>existing.collection==="memories"&&existing.id!==item.id&&existing.albumId===item.albumId&&pinterestPinUrl(existing.url)===item.url))throw new InputError("Esta referência já está guardada neste álbum. Escolha outro destino ou edite a legenda existente.",409);
 }
