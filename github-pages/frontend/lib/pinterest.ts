@@ -1,5 +1,12 @@
 import type {Item} from "./model";
 export const inspirationCategories=[{id:"apartment",label:"Apartamento e casa"},{id:"wedding",label:"Casamento"},{id:"general",label:"Decoração geral"}] as const;
+// Public board links are rendered by Pinterest's official image mural widget.
+// These are topic references, not the signed-in account's recommendations.
+export const publicInspirationBoards=[
+ {id:"public-apartment",title:"Apartamento e interiores",category:"apartment",url:"https://www.pinterest.com/djzepin/decora%C3%A7%C3%A3o-apartamento/"},
+ {id:"public-wedding",title:"Casamento em lilás",category:"wedding",url:"https://www.pinterest.com/hadassasilva268/casamento/"},
+ {id:"public-decoration",title:"Ideias para a casa",category:"general",url:"https://www.pinterest.com/carinahdra/ideias-para-a-casa/"}
+] as const;
 function pinterestHost(host:string){return host==="pinterest.com"||host.endsWith(".pinterest.com")||["pinterest.co.uk","www.pinterest.co.uk","pinterest.fr","www.pinterest.fr","pinterest.es","www.pinterest.es","pinterest.de","www.pinterest.de"].includes(host);}
 export function pinterestPinUrl(value:unknown){
  if(typeof value!=="string"||value.length>600)return null;

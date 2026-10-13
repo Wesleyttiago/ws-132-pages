@@ -25,6 +25,7 @@ try{
  assert.equal(helpers.pinterestBoardUrl("https://br.pinterest.com/nosso-perfil/nossa-sala/?utm_source=teste"),"https://www.pinterest.com/nosso-perfil/nossa-sala/");
  for(const bad of ["javascript:alert(1)","https://pinterest.com.fake.test/pin/123456789/","https://fake.test/pin/123456789/","https://secret:password@www.pinterest.com/pin/123456789/","https://pin.it/example","https://www.pinterest.com/search/pins/?q=teste"]){assert.equal(helpers.pinterestPinUrl(bad),null);assert.equal(helpers.pinterestBoardUrl(bad),null);}
  for(const idea of helpers.recommendedIdeas){assert.equal(helpers.pinterestPinUrl(idea.url),idea.url);assert.ok(model.INITIAL_ALBUMS.some(album=>album.id===idea.albumId));}
+ for(const board of helpers.publicInspirationBoards){assert.equal(helpers.pinterestBoardUrl(board.url),board.url);}
  for(const kind of ["pin","board"]){
   const url=kind==="pin"?helpers.recommendedIdeas[0].url:"https://www.pinterest.com/nosso-perfil/nossa-sala/";
   const html=renderToStaticMarkup(React.createElement(PinterestEmbed,{url,kind}));
@@ -38,11 +39,19 @@ try{
  assert.equal(renderToStaticMarkup(React.createElement(PinterestEmbed,{url:"javascript:alert(1)"})),"");
  const state={settings:{...model.DEFAULT_SETTINGS},items:[...model.INITIAL_ALBUMS,{id:"saved-test",collection:"memories",revision:0,albumId:"apartment-0",url:helpers.recommendedIdeas[0].url,caption:"Nossa sala",date:"2026-10-13",favorite:false},{id:"board-test",collection:"inspirationBoards",revision:0,title:"Pasta de teste",url:"https://www.pinterest.com/nosso-perfil/nossa-sala/",category:"apartment",note:""}]};
  const html=renderToStaticMarkup(React.createElement(Inspirations,{state,loaded:true,busy:false,save:()=>{throw new Error("Rendering must not save data.");},openAlbum:()=>{}}));
- for(const text of ["Nossas inspirações.","Apartamento e casa","Casamento","Decoração geral","Adicionar um Pin","Salvar no álbum","Guardadas (1)","Adicionar pasta","Pasta de teste","Guardar um Pin desta pasta","Explorar no Pinterest"]){assert.ok(html.includes(text),text);}
- assert.equal((html.match(/<iframe /g)||[]).length,helpers.recommendedIdeas.length+1);
+ for(const text of ["Inspirações","Apartamento e casa","Casamento","Decoração geral","Adicionar um Pin","Guardadas","Pastas","Pasta de teste","Ir ao Pinterest"]){assert.ok(html.includes(text),text);}
+ assert.equal((html.match(/<iframe /g)||[]).length,1);
+ assert.ok(html.includes('aria-label="Escolher mural do Pinterest"'));
+ assert.ok(html.includes("layout=mural"));
+ assert.ok(html.includes("nossa-sala"));
+ assert.ok(html.includes('href="https://www.pinterest.com/"'));
+ assert.ok(html.includes('role="search"'));
+ assert.ok(!html.includes("inspiration-card-copy"));
+ assert.ok(!html.includes("inspiration-intro"));
+ assert.ok(!html.includes("Nossa sala"));
  const embedPage=await readFile(root+"public/pinterest-embed.html","utf8"),embedScript=await readFile(root+"public/pinterest-embed.js","utf8");
  assert.ok(embedPage.includes("Content-Security-Policy"));
  assert.ok(embedScript.includes("https://assets.pinterest.com/js/pinit.js"));
  assert.ok(!embedScript.includes("sessionStorage")&&!embedScript.includes("localStorage"));
- console.log("PASS valid Pinterest destinations, URL normalization, isolated previews, source attribution, and rendering of the inspiration tab with shared board bookmarks.");
+ console.log("PASS valid Pinterest destinations, isolated previews, source attribution, image mural rendering without local photo descriptions, and direct Pinterest search/home access.");
 }finally{await rm(folder,{recursive:true,force:true});}
