@@ -15,6 +15,7 @@ export async function putItem(db: D1Database, i: Item, user: string, existing: b
   const time = new Date().toISOString();
   const r = existing ? await db.prepare("UPDATE records SET payload = ?, revision = revision + 1, updated_at = ? WHERE id = ? AND collection = ? AND revision = ? AND deleted = 0").bind(JSON.stringify(i), time, i.id, i.collection, i.revision).run() : await db.prepare("INSERT OR IGNORE INTO records (id, collection, payload, revision, deleted, created_by, updated_at) VALUES (?, ?, ?, 0, 0, ?, ?)").bind(i.id, i.collection, JSON.stringify(i), user, time).run();
   if (!r.meta.changes && existing) throw new InputError("Esse registro mudou em outro aparelho. Reabra-o para editar a versão atual.", 409);
+  if (!r.meta.changes && !existing && i.collection === "weddingPlan") throw new InputError("O orçamento foi definido em outro aparelho. Atualize antes de editar.", 409);
 }
 export async function deleteItem(db: D1Database, id: string, revision: number) {
   const r = await db.prepare("UPDATE records SET deleted = 1, revision = revision + 1, updated_at = ? WHERE id = ? AND revision = ? AND deleted = 0").bind(new Date().toISOString(), id, revision).run();

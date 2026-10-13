@@ -1,4 +1,5 @@
 import { collections, validDate, musicUrl, type Item, type Settings } from "./model";
+import { taskStages, taskPeriods, paymentStages, rsvpStages, contractUrlAllowed } from "./business";
 export class InputError extends Error { constructor(message: string, public status = 400) { super(message); } }
 function str(v: unknown, label: string, max: number, required = false): string { if (typeof v !== "string" || v.length > max || (required && !v.trim())) throw new InputError("Confira o campo " + label + "."); return v.trim(); }
 function cents(v: unknown, label: string, positive = false): number { if (typeof v !== "number" || !Number.isSafeInteger(v) || v < (positive ? 1 : 0) || v > 10000000000) throw new InputError("Informe um valor válido em " + label + "."); return v; }
@@ -12,7 +13,29 @@ export function cleanItem(v: Record<string, unknown>): Item {
   if (!/^[a-zA-Z0-9-]+$/.test(i.id) || !Number.isSafeInteger(i.revision) || i.revision < 0) throw new InputError("Registro inválido.");
   const note = str(v.note ?? "", "observação", 1000);
   if (i.collection !== "songs" && !validDate(v.date ?? "", i.collection === "transactions")) throw new InputError("Confira a data.");
-  if (i.collection === "albums") {
+  if (i.collection === "weddingPlan") {
+    if (i.id !== "wedding-plan") throw new InputError("Planejamento inválido.");
+    Object.assign(i, {budgetCents:cents(v.budgetCents,"orçamento total"),note});
+  } else if (i.collection === "weddingTasks") {
+    if (!taskStages.some(stage=>stage.id===v.status) || !taskPeriods.some(period=>period.id===v.period)) throw new InputError("Escolha a etapa e o prazo da tarefa.");
+    if (!validDate(v.date,true)) throw new InputError("Informe uma data de entrega válida.");
+    Object.assign(i,{title:str(v.title,"tarefa",180,true),date:v.date,status:v.status,period:v.period,note});
+  } else if (i.collection === "weddingCosts") {
+    if (!paymentStages.some(stage=>stage.id===v.paymentStatus)) throw new InputError("Escolha o status de pagamento.");
+    if (!validDate(v.nextDate??"")) throw new InputError("Confira o vencimento da próxima parcela.");
+    const realCents=v.realCents===null||v.realCents===undefined?null:cents(v.realCents,"valor fechado");
+    if(v.paymentStatus!=="unpaid"&&realCents===null)throw new InputError("Informe o valor fechado antes de registrar o pagamento.");
+    Object.assign(i,{title:str(v.title,"item ou serviço",160,true),category:str(v.category,"categoria",60,true),estimatedCents:cents(v.estimatedCents,"valor estimado"),realCents,paymentStatus:v.paymentStatus,nextDate:v.paymentStatus==="paid"?"":v.nextDate??"",note});
+  } else if (i.collection === "suppliers") {
+    const phone=str(v.phone??"","telefone",40),email=str(v.email??"","e-mail",254),contractUrl=str(v.contractUrl??"","contrato",600);
+    if(phone&&(!/^[+\d\s().-]+$/.test(phone)||phone.replace(/\D/g,"").length<10||phone.replace(/\D/g,"").length>15))throw new InputError("Informe o telefone com DDD, ou com código do país.");
+    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new InputError("Confira o e-mail do fornecedor.");
+    if(!contractUrlAllowed(contractUrl))throw new InputError("Use um link HTTPS para o contrato.");
+    Object.assign(i,{title:str(v.title,"empresa ou profissional",160,true),service:str(v.service,"serviço prestado",160,true),phone,email,contractUrl,contractName:str(v.contractName??"","arquivo do contrato",180),note});
+  } else if (i.collection === "guests") {
+    if(!rsvpStages.some(stage=>stage.id===v.rsvp))throw new InputError("Escolha o status da confirmação.");
+    Object.assign(i,{title:str(v.title,"nome completo",160,true),group:str(v.group??"","grupo ou família",100),isSponsor:v.isSponsor===true,rsvp:v.rsvp,restriction:str(v.restriction??"","restrição alimentar",1000)});
+  } else if (i.collection === "albums") {
     const parentId = str(v.parentId ?? "", "álbum principal", 100);
     Object.assign(i, { title: str(v.title, "nome do álbum", 100, true), parentId, note });
   } else if (i.collection === "transactions") {

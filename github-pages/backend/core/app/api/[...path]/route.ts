@@ -15,8 +15,30 @@ async function handle(request: Request) {
    const o = await env.BUCKET?.get("photos/" + key); if (!o) throw new InputError("Foto não encontrada.", 404);
    return new Response(o.body, { headers: { ...privateHeaders, "Content-Type": o.httpMetadata?.contentType ?? "image/jpeg", "Content-Disposition": "inline" } });
   }
+  if (path.startsWith("contracts/") && request.method === "GET") {
+   const key=path.slice(10);if(!/^[a-zA-Z0-9-]+$/.test(key))throw new InputError("Contrato não encontrado.",404);
+   const file=await env.BUCKET?.get("contracts/"+key);if(!file)throw new InputError("Contrato não encontrado.",404);
+   const filename=file.customMetadata?.filename??"contrato.pdf";
+   return new Response(file.body,{headers:{...privateHeaders,"Content-Type":"application/pdf","Content-Disposition":"attachment; filename*=UTF-8''"+encodeURIComponent(filename).replace(/'/g,"%27")}});
+  }
   if (request.method === "GET") throw new InputError("Página não encontrada.", 404);
   await seedDefaults(db, user.id);
+  if (path === "contracts" && request.method === "POST") {
+   if(!env.BUCKET)throw new InputError("O envio de contratos está temporariamente indisponível.",503);
+   const form=await request.formData(),file=form.get("file"),supplierId=String(form.get("supplierId")??""),revision=Number(form.get("revision"));
+   if(!/^[a-zA-Z0-9-]+$/.test(supplierId)||!Number.isSafeInteger(revision)||revision<0)throw new InputError("Fornecedor inválido.");
+   const supplier=(await readState(db)).items.find(i=>i.id===supplierId&&i.collection==="suppliers");
+   if(!supplier)throw new InputError("Salve o fornecedor antes de anexar o contrato.",404);
+   if(supplier.revision!==revision)throw new InputError("O fornecedor mudou em outro aparelho. Atualize antes de anexar o contrato.",409);
+   if(!(file instanceof File)||!file.size||file.size>10*1024*1024)throw new InputError("Escolha um contrato PDF de até 10 MB.");
+   const bytes=new Uint8Array(await file.arrayBuffer());
+   if(String.fromCharCode(...bytes.slice(0,5))!=="%PDF-")throw new InputError("O arquivo precisa ser um PDF válido.");
+   const id=crypto.randomUUID();let name=file.name.split(/[\\/]/).pop()?.replace(/[\x00-\x1f\x7f]/g,"").slice(0,170)||"contrato.pdf";if(!name.toLowerCase().endsWith(".pdf"))name+=".pdf";
+   const updated=cleanItem({...supplier,contractUrl:"/api/contracts/"+id,contractName:name});
+   await env.BUCKET.put("contracts/"+id,bytes,{httpMetadata:{contentType:"application/pdf"},customMetadata:{filename:name}});
+   try{await putItem(db,updated,user.id,true);}catch(e){await env.BUCKET.delete("contracts/"+id);throw e;}
+   return json(await readState(db),201);
+  }
   if (path === "photos" && request.method === "POST") {
    if (!env.BUCKET) throw new InputError("O envio de fotos está temporariamente indisponível.", 503);
    if (Number(request.headers.get("content-length") ?? 0) > 12 * 1024 * 1024) throw new InputError("Envie uma foto de até 10 MB.", 413);

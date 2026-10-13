@@ -1,7 +1,7 @@
 "use client";
 import {appFetch,PrivateImage,logout,downloadExport} from "../transport";
 import { useState, useEffect, useRef, type ReactNode, type FormEvent } from "react";
-import { Crown, Heart, House, Wallet, Camera, Music2, Settings as Cog, Plus, ArrowUpRight, ArrowDownLeft, ArrowRight, Check, CheckCircle2, Circle, Clock3, CalendarDays, LayoutGrid, List, X, Pencil, Trash2, Download, RefreshCw, Play, Pause, ExternalLink, LockKeyhole, Menu, Target, Flower2, BookHeart, ChevronLeft, ChevronRight, Search, Volume2 } from "lucide-react";
+import { Crown, Heart, House, Wallet, Camera, Music2, Settings as Cog, Plus, ArrowUpRight, ArrowDownLeft, ArrowRight, Check, CheckCircle2, Circle, Clock3, CalendarDays, LayoutGrid, List, X, Pencil, Trash2, Download, RefreshCw, Play, Pause, ExternalLink, LockKeyhole, Menu, Target, Flower2, BookHeart, ChevronLeft, ChevronRight, Search, Volume2, Briefcase } from "lucide-react";
 import { DEFAULT_SETTINGS, INITIAL_ITEMS, HERO_PHOTO, DRAWING_PHOTO, balance, goalBalance, money, parseMoney, countdown, dateLabel, today, youtubeId, type State, type Item, type Collection } from "@/lib/model";
 
 type Tab = "home" | "money" | "goals" | "tasks" | "album" | "playlist" | "settings";
@@ -107,6 +107,7 @@ export default function Reino({ displayName, initialState }: { displayName: stri
       <div className="side-rule"><span /></div>
       <span className="side-label">A NOSSA CAMINHADA</span>
       <nav aria-label="Menu principal">{nav.map((n) => <button key={n.id} className={"nav-item " + (tab === n.id ? "active" : "")} aria-current={tab === n.id ? "page" : undefined} onClick={() => go(n.id)}><n.icon size={19} strokeWidth={1.6} /><span>{n.label}</span>{tab === n.id && <i />}</button>)}</nav>
+      <div className="business-entry"><a className="nav-item" href="#gestao/cronograma"><Briefcase size={18}/><span>Gestão do casamento</span><ArrowUpRight size={13}/></a><small>Cronograma · Orçamento · Convidados</small></div>
       <div className="side-bottom"><div className="couple-avatars"><Avatar who={1} /><Avatar who={2} /></div><strong>{s.person1} <span>&</span> {s.person2}</strong><p>132 · Eu te amo 🤍💜</p><button className={"nav-item " + (tab === "settings" ? "active" : "")} onClick={() => go("settings")}><Cog size={18} /><span>Nosso espaço</span></button><span className="private-note"><LockKeyhole size={12} /> Só para nós</span></div>
     </aside>
     <div className="main-wrap"><header className="topbar"><div className="top-left"><button className="icon-button mobile-menu" aria-label="Abrir menu" onClick={() => setMobile(true)}><Menu size={22} /></button><span className="top-label">CONSTRUINDO O NOSSO AMANHÃ</span></div><div className="top-right">{loaded&&activeSong&&<a className="top-music-link" href="#nossa-musica" aria-label="Ir ao player de música"><Music2 size={15}/><span>Nossa música</span></a>}<span className={"sync-status " + (syncError ? "bad" : "")}><i />{busy ? "Salvando…" : syncError ? "Sem sincronização" : loaded ? "Tudo guardadinho" : "Abrindo nosso espaço…"}</span><button className="icon-button" aria-label="Atualizar dados" disabled={busy} onClick={() => refresh()}><RefreshCw size={15} /></button><div className="mini-monogram">{s.person1[0]}<span>&</span>{s.person2[0]}</div></div></header>

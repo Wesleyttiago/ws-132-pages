@@ -2,7 +2,7 @@ import ts from "typescript";
 import {readFile,writeFile,mkdir,cp} from "node:fs/promises";
 const root=new URL("../core",import.meta.url).pathname;
 let source="let env;\n";
-for(const name of ["model","validation","store"]){
+for(const name of ["model","business","validation","store"]){
  let text=await readFile(root+"/lib/"+name+".ts","utf8");
  if(name==="model")text=text.replace('import photos from "./initial-photos.json";',"const photos="+await readFile(root+"/lib/initial-photos.json","utf8")+";");
  text=text.replace(/^import .*from .*;\s*$/gm,"");
