@@ -1,0 +1,65 @@
+import {createContext,useContext,useEffect,useRef,useState,useSyncExternalStore,type ReactNode} from "react";
+import {Music2,Play,Pause,Upload,ExternalLink,X,LoaderCircle,Volume2} from "lucide-react";
+import {MusicController} from "../lib/music-controller";
+import {youtubeId,type Item,type State} from "../lib/model";
+import {appFetch} from "../transport";
+
+const Context=createContext<{controller:MusicController;accept:(state:State)=>void}|null>(null);
+export function useMusic(){const value=useContext(Context);if(!value)throw new Error("MusicProvider is required.");return value;}
+export function useMusicSnapshot(){const {controller}=useMusic();return useSyncExternalStore(controller.subscribe,controller.getSnapshot,controller.getSnapshot);}
+export function MusicProvider({state,screen,accept,children}:{state:State;screen:string;accept:(state:State)=>void;children:ReactNode}){
+ const audio=useRef<HTMLAudioElement>(null);
+ const [controller]=useState(()=>new MusicController({createAudio:()=>audio.current??new Audio(),getBlob:async(path,signal)=>{const response=await appFetch(path,{signal});if(!response.ok)throw new Error("Áudio indisponível.");return response.blob();},objectURL:blob=>URL.createObjectURL(blob),revokeURL:url=>URL.revokeObjectURL(url),pausedInitially:typeof sessionStorage!=="undefined"&&sessionStorage.getItem("ws132-music-paused")==="1",savePaused:paused=>sessionStorage.setItem("ws132-music-paused",paused?"1":"0")}));
+ useEffect(()=>{controller.setLibrary(state.items,state.settings);},[controller,state.items,state.settings]);
+ useEffect(()=>{controller.navigate(screen);},[controller,screen]);
+ useEffect(()=>()=>controller.destroy(),[controller]);
+ return <Context.Provider value={{controller,accept}}>{children}<audio ref={audio} id="ws132-audio" preload="metadata" aria-hidden="true"/><MediaSessionBridge/></Context.Provider>;
+}
+function MediaSessionBridge(){
+ const {controller}=useMusic(),snapshot=useMusicSnapshot(),song=controller.getSong();
+ useEffect(()=>{if(!("mediaSession" in navigator)||typeof MediaMetadata==="undefined"||!song)return;const session=navigator.mediaSession;session.metadata=new MediaMetadata({title:String(song.title),artist:String(song.artist??""),album:"W&S 132"});session.playbackState=snapshot.status==="playing"?"playing":"paused";
+  const actions:[MediaSessionAction,()=>void][]=[["play",()=>{void controller.play();}],["pause",()=>controller.pause()],["stop",()=>controller.pause()],["seekbackward",()=>controller.seek(controller.getPosition()-10)],["seekforward",()=>controller.seek(controller.getPosition()+10)]];
+  for(const [name,action] of actions)try{session.setActionHandler(name,action);}catch{}
+  return()=>{for(const [name] of actions)try{session.setActionHandler(name,null);}catch{};session.metadata=null;session.playbackState="none";};
+ },[controller,snapshot.songId,snapshot.status,song?.title,song?.artist]);return null;
+}
+export function AttachAudio({song,compact=false}:{song:Item;compact?:boolean}){
+ const {accept}=useMusic(),input=useRef<HTMLInputElement>(null),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+ async function upload(file:File){
+  if(!file.size||file.size>20*1024*1024){setNotice("Escolha um áudio de até 20 MB.");return;}
+  setBusy(true);setNotice("");
+  try{const body=new FormData();body.append("file",file);body.append("songId",song.id);body.append("revision",String(song.revision));const response=await appFetch("/api/audio",{method:"POST",headers:{"x-nosso-reino":"1"},body});const data=await response.json();if(!response.ok)throw new Error(data.error??"Não foi possível enviar o áudio.");accept(data);setNotice("Áudio anexado. Pronto para ouvir.");}catch(error){setNotice(error instanceof Error?error.message:"Falha ao enviar o áudio.");}finally{setBusy(false);}
+ }
+ return <span className={"attach-audio "+(compact?"compact":"")}><input ref={input} type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" hidden onChange={event=>{const file=event.target.files?.[0];event.target.value="";if(file)void upload(file);}}/><button className="text-link" type="button" disabled={busy} onClick={()=>input.current?.click()} aria-label={(song.audioUrl?"Trocar áudio de ":"Anexar áudio a ")+String(song.title)}>{busy?<LoaderCircle size={15} className="spinning"/>:<Upload size={15}/>}<span>{busy?"Enviando…":song.audioUrl?"Trocar áudio":"Anexar áudio"}</span></button>{notice&&<span className="audio-upload-notice" role="status">{notice}</span>}</span>;
+}
+export function MusicButton(){
+ const {controller}=useMusic(),snapshot=useMusicSnapshot(),song=controller.getSong(),[open,setOpen]=useState(false),host=useRef<HTMLDivElement>(null);
+ useEffect(()=>{if(!open)return;const key=(event:KeyboardEvent)=>{if(event.key==="Escape")setOpen(false);},outside=(event:PointerEvent)=>{if(!host.current?.contains(event.target as Node))setOpen(false);};document.addEventListener("keydown",key);document.addEventListener("pointerdown",outside);return()=>{document.removeEventListener("keydown",key);document.removeEventListener("pointerdown",outside);};},[open]);
+ const playing=snapshot.status==="playing",loading=snapshot.status==="loading";
+ function toggle(){if(playing||loading){controller.pause();setOpen(false);}else if(song?.audioUrl||snapshot.mode==="video"&&location.hash==="#album"){void controller.play();}else setOpen(!open);}
+ return <div className="music-control" ref={host}><button className={"music-toggle "+(playing?"is-playing":"")} onClick={toggle} disabled={!song} aria-label={playing?"Pausar música":loading?"Cancelar reprodução":"Reproduzir música"} aria-pressed={playing} aria-expanded={open} title={song?String(song.title)+" · "+String(song.artist):"Nossa música"}>{loading?<LoaderCircle size={17} className="spinning"/>:playing?<Pause size={17}/>:<Play size={17}/>}<span>{playing?"Pausar":loading?"Carregando":"Nossa música"}</span>{playing&&<span className="sound-bars" aria-hidden="true"><i/><i/><i/></span>}</button>{open&&song&&<div className="music-popover" role="dialog" aria-label="Nossa música"><button className="icon-button" onClick={()=>setOpen(false)} aria-label="Fechar controle de música"><X size={17}/></button><Music2 size={23}/><strong>{String(song.title)}</strong><span>{String(song.artist)}</span><p>Anexe o arquivo de áudio para ouvir só o som, com o mesmo player em todas as telas.</p><AttachAudio song={song}/><button className="text-link" onClick={()=>{controller.openVideo(song.id);location.hash="#album";setOpen(false);}}>Ouvir no álbum <ExternalLink size={14}/></button></div>}</div>;
+}
+export function TrackPlayButton({song,index}:{song:Item;index:number}){
+ const {controller}=useMusic(),snapshot=useMusicSnapshot(),playing=snapshot.songId===song.id&&snapshot.status==="playing";
+ return <button className="song-play" aria-label={(playing?"Pausar ":"Ouvir ")+String(song.title)} onClick={()=>{if(playing)controller.pause();else if(song.audioUrl)void controller.play(song.id);else{controller.openVideo(song.id);location.hash="#album";}}}>{playing?<Pause size={16}/>:<Play size={16}/>}<span>{String(index+1).padStart(2,"0")}</span></button>;
+}
+const clock=(seconds:number)=>{const n=Math.max(0,Math.floor(seconds||0));return Math.floor(n/60)+":"+String(n%60).padStart(2,"0");};
+function AudioProgress(){
+ const {controller}=useMusic(),snapshot=useMusicSnapshot(),[time,setTime]=useState(0),[duration,setDuration]=useState(0),audio=controller.getAudio();
+ useEffect(()=>{if(!audio)return;const update=()=>{setTime(audio.currentTime||0);setDuration(Number.isFinite(audio.duration)?audio.duration:0);};update();audio.addEventListener("timeupdate",update);audio.addEventListener("loadedmetadata",update);audio.addEventListener("durationchange",update);return()=>{audio.removeEventListener("timeupdate",update);audio.removeEventListener("loadedmetadata",update);audio.removeEventListener("durationchange",update);};},[audio,snapshot.songId]);
+ return <div className="audio-progress"><input type="range" min={0} max={duration||1} step={.1} value={Math.min(time,duration||1)} disabled={!duration} onChange={event=>{controller.seek(Number(event.target.value));setTime(Number(event.target.value));}} aria-label="Posição da música"/><div><span>{clock(time)}</span><span>{clock(duration)}</span></div></div>;
+}
+type YTPlayer={playVideo:()=>void;pauseVideo:()=>void;seekTo:(seconds:number,allow:boolean)=>void;getCurrentTime:()=>number;setVolume:(volume:number)=>void;destroy:()=>void};
+declare global{interface Window{YT?:{Player:new(element:HTMLElement,options:object)=>YTPlayer};onYouTubeIframeAPIReady?:()=>void;}}
+let youtubeReady:Promise<void>|null=null;
+function loadYoutube(){if(window.YT?.Player)return Promise.resolve();if(youtubeReady)return youtubeReady;youtubeReady=new Promise((resolve,reject)=>{const previous=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=()=>{previous?.();resolve();};let script=document.getElementById("yt-api") as HTMLScriptElement|null;if(!script){script=document.createElement("script");script.id="yt-api";script.src="https://www.youtube.com/iframe_api";script.onerror=()=>{youtubeReady=null;script?.remove();reject(new Error("Player indisponível."));};document.head.appendChild(script);}});return youtubeReady;}
+function AlbumVideo({song}:{song:Item}){
+ const {controller}=useMusic(),host=useRef<HTMLDivElement>(null),video=youtubeId(String(song.url));
+ useEffect(()=>{if(!video||!host.current)return;let cancelled=false,player:YTPlayer|null=null;void loadYoutube().then(()=>{if(cancelled||!host.current||!window.YT)return;const element=document.createElement("div");host.current.replaceChildren(element);player=new window.YT.Player(element,{height:"236",width:"420",videoId:video,playerVars:{autoplay:0,playsinline:1,start:Math.floor(controller.getPosition()),origin:window.location.origin,rel:0},events:{onReady:()=>{if(!player||cancelled)return;controller.attachVideo({play:()=>player?.playVideo(),pause:()=>player?.pauseVideo(),time:()=>player?.getCurrentTime()??0,seek:seconds=>player?.seekTo(seconds,true),volume:value=>player?.setVolume(value*100)});},onStateChange:(event:{data:number})=>{if(!cancelled)controller.videoState(event.data);},onAutoplayBlocked:()=>{if(!cancelled)controller.videoBlocked();},onError:()=>{if(!cancelled)controller.videoError();}}});}).catch(()=>controller.videoError());return()=>{cancelled=true;controller.detachVideo();player?.destroy();};},[video,controller]);
+ return video?<div className="youtube-host" ref={host}/>:song.url?<a className="button secondary" href={String(song.url)} target="_blank" rel="noopener noreferrer">Ouvir no Spotify <ExternalLink size={15}/></a>:<p className="player-note">Anexe o áudio desta música para começar a ouvir.</p>;
+}
+export function AlbumMusicCard(){
+ const {controller}=useMusic(),snapshot=useMusicSnapshot(),song=controller.getSong();if(!song)return null;
+ const playing=snapshot.status==="playing";
+ return <aside className="music-station album-music" aria-label="Nossa trilha sonora"><div className="music-station-heading"><span><Music2 size={15}/> NOSSA TRILHA SONORA</span><span className="music-mode">{song.audioUrl?"Áudio":"Playlist"}</span></div><div className="music-player"><div className="song-info"><span className="music-symbol"><Music2 size={20}/></span><div><strong>{String(song.title)}</strong><span>{String(song.artist)}</span></div><button className="icon-button purple" aria-label={playing?"Pausar música":"Reproduzir música"} onClick={()=>controller.toggle()}>{playing?<Pause size={19}/>:<Play size={19}/>}</button></div>{song.audioUrl?<><div className={"audio-disc "+(playing?"playing":"")} aria-hidden="true"><span>132</span></div><AudioProgress/></>:<AlbumVideo song={song}/>}<label className="music-volume"><Volume2 size={15}/><input aria-label="Volume da música" type="range" min={0} max={1} step={.05} value={snapshot.volume} onChange={event=>controller.setVolume(Number(event.target.value))}/></label>{snapshot.message&&snapshot.status!=="needs-audio"&&<p className="player-note" role="status">{snapshot.message}</p>}<a className="text-link" href={String(song.url)} target="_blank" rel="noopener noreferrer">Abrir música <ExternalLink size={13}/></a>{!song.audioUrl&&<AttachAudio song={song}/>}</div></aside>;
+}

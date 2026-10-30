@@ -1,1 +1,12 @@
-{"name":"ws132-protected-backend","private":true,"type":"module","scripts":{"build":"python scripts/build-assets.py && node scripts/build-worker.mjs","check":"node scripts/check-worker.mjs"}}
+{
+  "name": "ws132-protected-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python scripts/build-assets.py && node scripts/build-worker.mjs",
+    "check": "node scripts/check-audio.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

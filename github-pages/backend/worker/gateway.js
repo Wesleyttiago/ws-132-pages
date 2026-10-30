@@ -62,7 +62,7 @@ export default { async fetch(request,bindings){
   }
   if(!path.startsWith("/api/"))return reply({error:"Página não encontrada."},404);
   if(!["GET","HEAD"].includes(request.method)&&origin!==allowed)return reply({error:"Origem inválida."},403);
-  if(Number(request.headers.get("content-length")??0)>12*1024*1024)return reply({error:"Solicitação muito grande."},413);
+  if(Number(request.headers.get("content-length")??0)>(path==="/api/audio"?21:12)*1024*1024)return reply({error:"Solicitação muito grande."},413);
   const headers=new Headers(request.headers);
   for(const key of Array.from(headers.keys()))if(key.startsWith("oai-authenticated-"))headers.delete(key);
   headers.set("oai-authenticated-user-id","shared-couple");headers.set("oai-authenticated-user-email","couple@ws132.local");headers.set("sec-fetch-site","same-origin");

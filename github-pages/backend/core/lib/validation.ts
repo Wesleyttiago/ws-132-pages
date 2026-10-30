@@ -55,8 +55,11 @@ export function cleanItem(v: Record<string, unknown>): Item {
     if (!pin&&!/^\/(?:photos\/[a-f0-9]+\.(?:jpg|webp)|api\/media\/[a-zA-Z0-9-]+)$/.test(url)) throw new InputError("Use uma foto enviada ou um link completo de Pin do Pinterest.");
     Object.assign(i, { albumId: str(v.albumId ?? "album-love", "álbum", 100, true), url, sourceType:pin?"pinterest":"photo", caption: str(v.caption ?? "", "legenda", 1000), date: v.date ?? "", favorite: v.favorite === true, width: pin?0:Number(v.width ?? 0), height: pin?0:Number(v.height ?? 0) });
   } else {
-    if (!musicUrl(v.url)) throw new InputError("Use um link de música ou playlist do YouTube ou Spotify.");
-    Object.assign(i, { title: str(v.title, "música", 140, true), artist: str(v.artist ?? "", "artista", 100), url: v.url, note });
+    const link=str(v.url??"","link da música",500);
+    if (link&&!musicUrl(link)) throw new InputError("Use um link de música ou playlist do YouTube ou Spotify.");
+    const audioUrl=str(v.audioUrl??"","áudio",160);
+    if(audioUrl&&!/^\/api\/audio\/[a-zA-Z0-9-]+$/.test(audioUrl))throw new InputError("Use um áudio enviado para a playlist.");
+    Object.assign(i, { title: str(v.title, "música", 140, true), artist: str(v.artist ?? "", "artista", 100), url: link, note, audioUrl, audioName:str(v.audioName??"","arquivo de áudio",180) });
   }
   return i;
 }

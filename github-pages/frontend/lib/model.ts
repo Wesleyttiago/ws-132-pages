@@ -16,7 +16,7 @@ export const INITIAL_ITEMS: Item[] = [];
 export const HERO_PHOTO = "/photos/515b6167c3cecf.webp";
 export const DRAWING_PHOTO = "/photos/56c37c696d6b63.webp";
 export function money(cents: number) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100); }
-export function parseMoney(value: string) { const clean = value.replace(/[R$\s]/g, "").replace(/\./g, "").replace(",", "."); const n = Number(clean); return clean && Number.isFinite(n) ? Math.round(n * 100) : NaN; }
+export function parseMoney(value:string){const text=value.trim().replace(/^R\$\s*/,"").replace(/\s/g,"");let clean="";if(/^\d+(?:\.\d{3})*(?:,\d{1,2})?$/.test(text))clean=text.replace(/\./g,"").replace(",",".");else if(/^\d+\.\d{1,2}$/.test(text))clean=text;const cents=clean?Math.round(Number(clean)*100):NaN;return Number.isSafeInteger(cents)?cents:NaN;}
 export function balance(s: State) { return s.settings.openingCents + s.items.filter((i) => i.collection === "transactions").reduce((n, i) => n + (i.type === "expense" ? -1 : 1) * Number(i.amountCents), 0); }
 export function goalBalance(s: State, id: string) { return s.items.filter((i) => i.collection === "transactions" && i.goalId === id).reduce((n, i) => n + (i.type === "expense" ? -1 : 1) * Number(i.amountCents), 0); }
 export function validDate(v: unknown, required = false): v is string { if (v === "" && !required) return true; if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false; const d = new Date(v + "T12:00:00Z"); return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === v; }

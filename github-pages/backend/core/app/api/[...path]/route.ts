@@ -21,8 +21,34 @@ async function handle(request: Request) {
    const filename=file.customMetadata?.filename??"contrato.pdf";
    return new Response(file.body,{headers:{...privateHeaders,"Content-Type":"application/pdf","Content-Disposition":"attachment; filename*=UTF-8''"+encodeURIComponent(filename).replace(/'/g,"%27")}});
   }
+  if(path.startsWith("audio/")&&request.method==="GET"){
+   const key=path.slice(6);if(!/^[a-zA-Z0-9-]+$/.test(key))throw new InputError("Áudio não encontrado.",404);
+   const file=await env.BUCKET?.get("audio/"+key);if(!file)throw new InputError("Áudio não encontrado.",404);
+   return new Response(file.body,{headers:{...privateHeaders,"Content-Type":file.httpMetadata?.contentType??"audio/mpeg","Content-Disposition":"inline"}});
+  }
   if (request.method === "GET") throw new InputError("Página não encontrada.", 404);
   await seedDefaults(db, user.id);
+  if(path==="audio"&&request.method==="POST"){
+   if(!env.BUCKET)throw new InputError("O envio de áudio está temporariamente indisponível.",503);
+   if(Number(request.headers.get("content-length")??0)>21*1024*1024)throw new InputError("Envie um áudio de até 20 MB.",413);
+   const form=await request.formData(),file=form.get("file"),songId=String(form.get("songId")??""),revision=Number(form.get("revision"));
+   if(!/^[a-zA-Z0-9-]+$/.test(songId)||!Number.isSafeInteger(revision)||revision<0)throw new InputError("Música inválida.");
+   const song=(await readState(db)).items.find(item=>item.id===songId&&item.collection==="songs");
+   if(!song)throw new InputError("Salve a música na playlist antes de anexar o áudio.",404);
+   if(song.revision!==revision)throw new InputError("A música mudou em outro aparelho. Atualize antes de anexar o áudio.",409);
+   if(!(file instanceof File)||file.size<12||file.size>20*1024*1024)throw new InputError("Escolha um arquivo MP3, M4A, OGG ou WAV de até 20 MB.");
+   const bytes=new Uint8Array(await file.arrayBuffer()),text=(start:number,end:number)=>String.fromCharCode(...bytes.slice(start,end));let type="";
+   if(text(0,3)==="ID3"||bytes[0]===255&&(bytes[1]&224)===224&&(bytes[1]&6)!==0)type="audio/mpeg";
+   else if(text(0,4)==="OggS")type="audio/ogg";
+   else if(text(0,4)==="RIFF"&&text(8,12)==="WAVE")type="audio/wav";
+   else if(text(4,8)==="ftyp"&&["M4A ","M4B ","isom","mp42"].includes(text(8,12)))type="audio/mp4";
+   if(!type)throw new InputError("O arquivo precisa ser um áudio MP3, M4A, OGG ou WAV válido.");
+   const id=crypto.randomUUID(),name=file.name.split(/[\\/]/).pop()?.replace(/[\x00-\x1f\x7f]/g,"").slice(0,170)||"audio";
+   const updated=cleanItem({...song,audioUrl:"/api/audio/"+id,audioName:name});
+   await env.BUCKET.put("audio/"+id,bytes,{httpMetadata:{contentType:type},customMetadata:{filename:name}});
+   try{await putItem(db,updated,user.id,true);}catch(error){await env.BUCKET.delete("audio/"+id);throw error;}
+   return json(await readState(db),201);
+  }
   if (path === "contracts" && request.method === "POST") {
    if(!env.BUCKET)throw new InputError("O envio de contratos está temporariamente indisponível.",503);
    const form=await request.formData(),file=form.get("file"),supplierId=String(form.get("supplierId")??""),revision=Number(form.get("revision"));
@@ -50,7 +76,8 @@ async function handle(request: Request) {
    else if (String.fromCharCode(...b.slice(0,4)) === "RIFF" && String.fromCharCode(...b.slice(8,12)) === "WEBP") type = "image/webp";
    else if (/^GIF8[79]a$/.test(String.fromCharCode(...b.slice(0,6)))) type = "image/gif";
    if (!type) throw new InputError("Use uma foto JPG, PNG, WebP ou GIF. No iPhone, escolha o formato mais compatível.");
-   const id = crypto.randomUUID(), item = cleanItem({ id, collection: "memories", url: "/api/media/" + id, albumId: String(form.get("albumId") ?? "album-love"), caption: String(form.get("caption") ?? ""), date: String(form.get("date") ?? ""), favorite: false });
+   const dimension=(value:FormDataEntryValue|null)=>{const n=Number(value);return Number.isSafeInteger(n)&&n>0&&n<=30000?n:0;};
+   const id = crypto.randomUUID(), item = cleanItem({ id, collection: "memories", url: "/api/media/" + id, albumId: String(form.get("albumId") ?? "album-love"), caption: String(form.get("caption") ?? ""), date: String(form.get("date") ?? ""), favorite: false,width:dimension(form.get("width")),height:dimension(form.get("height")) });
    validatePlacement((await readState(db)).items, item);
    await env.BUCKET.put("photos/" + id, b, { httpMetadata: { contentType: type } });
    try { await putItem(db, item, user.id, false); } catch (e) { await env.BUCKET.delete("photos/" + id); throw e; }
