@@ -1,5 +1,6 @@
+import {WEDDING_CHECKLIST} from "./checklist";
 import photos from "./initial-photos.json";
-export const collections = ["transactions", "goals", "tasks", "memories", "songs", "albums", "weddingTasks", "weddingCosts", "suppliers", "guests", "weddingPlan", "inspirationBoards"] as const;
+export const collections = ["transactions", "goals", "tasks", "memories", "songs", "albums", "weddingTasks", "weddingCosts", "suppliers", "guests", "weddingPlan", "inspirationBoards", "weddingChecklist"] as const;
 export type Collection = (typeof collections)[number];
 export type Item = { id: string; collection: Collection; revision: number; [key: string]: unknown };
 export type Settings = { title: string; person1: string; person2: string; weddingDate: string; openingCents: number; targetCents: number; monthlyCents: number; entryAutoplay: boolean; entrySongId: string; albumAutoplay: boolean; albumSongId: string; revision: number };
@@ -13,6 +14,7 @@ export const INITIAL_ALBUMS: Item[] = [
   ...["Cerimônia", "Mesa e bolo", "Flores e tulipas", "Recepção", "Iluminação", "Convites e lembranças"].map((title,index) => ({ id: "wedding-" + index, collection: "albums" as const, revision: 0, title, parentId: "album-wedding", note: "" })),
 ];
 export const INITIAL_ITEMS: Item[] = [
+  ...WEDDING_CHECKLIST,
   ...INITIAL_ALBUMS,
   { id: "photograph", collection: "songs", revision: 0, title: "Photograph", artist: "Ed Sheeran", url: "https://www.youtube.com/watch?v=nSDgHBxUbVQ", note: "A trilha sonora do nosso álbum." },
   { id: "never-be-alone", collection: "songs", revision: 0, title: "Never Be Alone", artist: "Shawn Mendes", url: "https://www.youtube.com/watch?v=QRLzWrBhZdY", note: "Para lembrar que estamos juntos." },

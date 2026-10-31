@@ -1,6 +1,7 @@
 import { collections, validDate, musicUrl, type Item, type Settings } from "./model";
 import { taskStages, taskPeriods, paymentStages, rsvpStages, contractUrlAllowed } from "./business";
 import { pinterestPinUrl, pinterestBoardUrl, inspirationCategories } from "./pinterest";
+import {checklistCategories,checklistStages} from "./checklist";
 export class InputError extends Error { constructor(message: string, public status = 400) { super(message); } }
 function str(v: unknown, label: string, max: number, required = false): string { if (typeof v !== "string" || v.length > max || (required && !v.trim())) throw new InputError("Confira o campo " + label + "."); return v.trim(); }
 function cents(v: unknown, label: string, positive = false): number { if (typeof v !== "number" || !Number.isSafeInteger(v) || v < (positive ? 1 : 0) || v > 10000000000) throw new InputError("Informe um valor válido em " + label + "."); return v; }
@@ -21,6 +22,9 @@ export function cleanItem(v: Record<string, unknown>): Item {
   } else if (i.collection === "weddingPlan") {
     if (i.id !== "wedding-plan") throw new InputError("Planejamento inválido.");
     Object.assign(i, {budgetCents:cents(v.budgetCents,"orçamento total"),note});
+  } else if (i.collection === "weddingChecklist") {
+    if(!checklistCategories.some(category=>category.id===v.category)||!checklistStages.some(stage=>stage.id===v.status))throw new InputError("Confira a categoria e a etapa do checklist.");
+    Object.assign(i,{title:str(v.title,"item do checklist",180,true),category:v.category,status:v.status,person:str(v.person??"Nós","responsável",45,true),date:v.date??"",note,optional:v.optional===true});
   } else if (i.collection === "weddingTasks") {
     if (!taskStages.some(stage=>stage.id===v.status) || !taskPeriods.some(period=>period.id===v.period)) throw new InputError("Escolha a etapa e o prazo da tarefa.");
     if (!validDate(v.date,true)) throw new InputError("Informe uma data de entrega válida.");
