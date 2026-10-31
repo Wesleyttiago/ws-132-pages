@@ -12,5 +12,7 @@ for file in [*sorted((public / 'photos').glob('*.webp')), public / 'avatars.webp
     output = io.BytesIO()
     image.save(output, format='WEBP', quality=80, method=4)
     assets['/' + str(file.relative_to(public))] = base64.b64encode(output.getvalue()).decode()
+for character in sorted((public / 'characters').glob('*-full.webp')):
+    assets['/' + str(character.relative_to(public))] = base64.b64encode(character.read_bytes()).decode()
 (backend / 'worker' / 'assets.json').write_text(json.dumps(assets, separators=(',', ':')))
 print('Protected assets prepared:', len(assets))

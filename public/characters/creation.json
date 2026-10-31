@@ -1,0 +1,22 @@
+{
+  "generator": "Built-in image_gen",
+  "reference": "public/avatars.webp",
+  "style": "Lápis de cor e aquarela, preservando os rostos dos avatares existentes; corpo inteiro e fundo transparente.",
+  "assets": [
+    {
+      "file": "wesley-full.webp",
+      "brief": "Wesley com os mesmos cabelos cacheados, rosto e camisa marfim da referência; calça taupe, tênis claros, relógio e pose de saudação."
+    },
+    {
+      "file": "suelaine-full.webp",
+      "brief": "Suelaine com o mesmo rosto, cabelos e colar de borboleta da referência; vestido lilás, sapatilhas claras e um pequeno buquê de tulipas."
+    }
+  ],
+  "web_format": {
+    "width": 720,
+    "height": 1080,
+    "format": "WebP",
+    "alpha": true
+  },
+  "animation": "Movimentos leves e reação de corações aplicados no site, com pausa e respeito à preferência de movimento reduzido."
+}

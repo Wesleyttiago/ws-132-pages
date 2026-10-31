@@ -1,0 +1,6 @@
+import {ArrowUpRight,Flower2,Heart,Images,Music2} from "lucide-react";
+import CoupleScene from "./couple-scene";
+
+export default function CoupleRoom({person1,person2}:{person1:string;person2:string}){
+ return <section className="couple-room" aria-label="O pequeno universo do casal"><div className="couple-room-stage"><div className="couple-room-heading"><span>{person1} <em>&</em> {person2}</span><small>DO NOSSO JEITO, SEMPRE.</small></div><CoupleScene person1={person1} person2={person2} variant="room"/></div><div className="couple-room-letter"><Flower2 size={29} strokeWidth={1.1}/><span className="eyebrow">PARA MINHA EEVANGELINE</span><h2>O nosso jeito<br/>de dizer <em>eu te amo.</em></h2><span className="couple-room-code"><Heart size={18} fill="currentColor"/>132<Heart size={18} fill="currentColor"/></span><p>Toque nos avatares ou no coração para dar vida ao nosso 132. Um carinho, do nosso jeito. 🤍💜</p><div className="couple-room-links"><a href="#album"><Images size={17}/><span>Nossas memórias</span><ArrowUpRight size={15}/></a><a href="#playlist"><Music2 size={17}/><span>Nossa trilha sonora</span><ArrowUpRight size={15}/></a></div><small>Deus à frente. Nós, lado a lado.</small></div></section>;
+}

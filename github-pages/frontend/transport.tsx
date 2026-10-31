@@ -23,7 +23,7 @@ function imageBlob(path:string){
 }
 export function PrivateImage({src,...props}:ImgHTMLAttributes<HTMLImageElement>){
  const [url,setUrl]=useState(""),image=useRef<HTMLImageElement>(null);
- useEffect(()=>{let gone=false,objectURL="";setUrl("");if(typeof src!=="string"||!/^\/(?:photos\/|api\/media\/|avatars\.webp$|logo-ws132\.webp$)/.test(src))return;
+ useEffect(()=>{let gone=false,objectURL="";setUrl("");if(typeof src!=="string"||!/^\/(?:photos\/|api\/media\/|avatars\.webp$|logo-ws132\.webp$|characters\/(?:wesley|suelaine)-full\.webp$)/.test(src))return;
  const load=()=>imageBlob(src).then(blob=>{if(gone)return;objectURL=URL.createObjectURL(blob);setUrl(objectURL);}).catch(()=>{});
  let observer:IntersectionObserver|null=null;
  if(props.loading==="lazy"&&typeof IntersectionObserver!=="undefined"&&image.current){observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){observer?.disconnect();void load();}},{rootMargin:"400px"});observer.observe(image.current);}else void load();
