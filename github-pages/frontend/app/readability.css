@@ -1,0 +1,177 @@
+/* Text roles stay readable on the existing white, silver and lilac surfaces.
+   Pastel colors belong to surfaces and decoration, rather than essential copy. */
+:root{
+ --text-copy:#67576f;
+ --text-meta:#705e79;
+ --text-action:#654276;
+ --text-gold:#785b2b;
+ --text-business:#536174;
+ --muted:var(--text-copy);
+ --type-copy:.875rem;
+ --type-label:.8125rem;
+ --type-meta:.75rem;
+}
+body{font-size:.9375rem}
+
+/* Reading, labels and supporting information have distinct, stable sizes. */
+.hero-copy>p,.page-title p,.next-step>p,.goal-card>p,.planning-note p,
+.agenda-empty p,.empty>p,.inspiration-letter>p,.settings-note p,
+.couple-room-letter>p,.ws-form-note,.ws-story-note{
+ color:var(--text-copy);font-size:var(--type-copy);line-height:1.75;
+}
+.treasury>p,.album-root>span,.album-upload-strip p,.album-keeper p,
+.allocation-note,.form-help,.ledger-detail>span,.ledger-detail>small,
+.ledger-opening span,.task-card>p,.task-meta,.goal-footer,.progress-label,
+.treasury-bottom,.financial-summary span,.agenda-row span,.commitment-row small,
+.overview-card small,.subtle,.photo small,.album-letter-footer,.album-letter cite,
+.song-row>div>span,.song-row>div>small,.playlist-artist,.playlist-listening,
+.playlist-player-note,.playlist-audio-help>p,.player-note,
+.music-volume,.playlist-album-player .music-volume,.audio-progress>div,
+.persistent-video small,.persistent-video-footer,.upload-companion-note p{
+ color:var(--text-meta);font-size:var(--type-meta);line-height:1.65;
+}
+.photo small{letter-spacing:normal;overflow-wrap:anywhere}
+.photo figcaption>span{color:var(--text-copy)}
+.song-info span:not(.music-symbol),.audio-progress>div,.music-mode,
+.song-badge,.playlist-cover>.page-companion+div>span:last-child{
+ color:var(--text-meta);font-size:var(--type-meta);
+}
+.song-row>div>span:not(.song-badge){color:var(--text-meta);font-size:var(--type-meta)}
+.album-letter blockquote{color:var(--text-copy)}
+.overview-card>span,.task-card h4,.ledger-detail>strong,.ledger-opening strong,
+.field,.check-field,.song-row strong{font-size:var(--type-label)}
+.field,.check-field{color:var(--text-copy)}
+.overview-card>span{color:var(--text-meta)}
+.field>span,.selected-photos small{color:var(--text-meta);font-size:var(--type-meta)}
+.button,.text-link,.task-actions select,.filters button,.subalbum-bar>button,
+.segmented button,.favorite-filter,.music-toggle{font-size:var(--type-label)}
+.text-link,.album-music .text-link,.music-player .text-link,
+.album-music .music-player .text-link,.persistent-video-footer a{
+ color:var(--text-action);font-size:var(--type-label);
+}
+.filters button,.subalbum-bar>button,.segmented button,.favorite-filter,
+.task-actions select,.icon-button,.photo-heart,.playlist-playback .icon-button{
+ color:var(--text-meta);
+}
+.filters button.selected,.subalbum-bar>button.selected,.segmented button.selected,
+.favorite-filter.selected,.photo-heart.hearted{color:var(--text-action)}
+.photo-heart.hearted{background:#f0e8f4}
+.album-search input,.ledger-search input,.biz-search input{font-size:var(--type-copy)}
+input::placeholder,textarea::placeholder{color:var(--text-meta);opacity:1}
+.ws-login input::placeholder{color:var(--text-meta);opacity:1}
+.field input,.field select,.field textarea,.biz-field input,.biz-field select,
+.biz-field textarea{font-size:1rem}
+
+/* Navigation and orientation must remain legible even when inactive. */
+.nav-item,.business-entry .nav-item{font-size:var(--type-label);color:var(--text-meta)}
+.nav-item.active{color:var(--text-action)}
+.side-label,.top-label,.brand small,.side-bottom>p,.private-note,.sync-status,
+.business-entry small,.footer,.footer>span,.side-bottom .nav-item,
+.mobile-dock>a,.couple-motion-toggle,.body-avatar-name{color:var(--text-meta)}
+.side-label,.top-label{font-size:.6875rem;letter-spacing:1px}
+.brand small,.private-note,.business-entry small,.footer,.side-bottom>p{font-size:var(--type-meta)}
+.business-entry small{font-size:var(--type-meta)!important}
+.mobile-dock small{font-size:.6875rem}
+.mobile-dock>a.active{color:var(--text-action)}
+.eyebrow,.biz-eyebrow,.hero-copy .eyebrow,.album-keeper .eyebrow,
+.main-goal-copy>.eyebrow,.card-top>span:first-child,.hero-signature,
+.countdown-intro .eyebrow,.side-bottom>strong span,.mini-monogram span{
+ color:var(--text-gold);
+}
+.eyebrow,.biz-eyebrow,.hero-copy .eyebrow,.album-keeper .eyebrow,
+.main-goal-copy>.eyebrow,.card-top>span:first-child{font-size:.6875rem;letter-spacing:1px}
+.hero-signature{font-size:.875rem}
+.countdown-numbers span,.countdown-intro>span:last-child,.tiny-tag,
+.settings-card dt,.settings-card dd,.settings-note .subtle{color:var(--text-meta)}
+.countdown-numbers span{font-size:.6875rem;letter-spacing:1px}
+.tiny-tag{font-size:var(--type-meta)}
+.couple-room-letter>.eyebrow,.couple-room-heading small{font-size:.6875rem;color:var(--text-gold)}
+.couple-room-links a,.couple-love-button,.couple-room-letter>small{color:var(--text-action)}
+.couple-room-links a{font-size:var(--type-label)}
+.couple-room-heading small{letter-spacing:1px}
+.couple-motion-toggle{font-size:.6875rem}
+
+/* The management area keeps its neutral palette, with the same reading rules. */
+.business-shell{--biz-muted:var(--text-business)}
+.biz-page-heading p,.biz-task>p,.biz-supplier-note p,.biz-empty p,
+.biz-delete-copy{color:var(--text-business);font-size:var(--type-copy);line-height:1.75}
+.biz-area-label,.biz-topbar,.biz-icon,.biz-filter,.biz-tool-note,.biz-column-title b,
+.biz-period,.biz-due,.biz-task-bottom select,.biz-column-empty,.biz-muted,
+.biz-summaries article>span,.biz-summaries small,.biz-table th,.biz-table td,
+.biz-table td>small,.biz-service-name,.biz-contact-list a,.biz-contract,
+.biz-contract strong,.biz-supplier-note>span,.biz-no-results,.biz-footnote,
+.biz-footer,.biz-field,.biz-check,.biz-form-help,.biz-field-label,.biz-file-input,
+.biz-file-input strong,.biz-file-input small,.biz-existing-file,.biz-side-date{
+ color:var(--text-business);
+}
+.biz-filter,.biz-tool-note,.biz-period,.biz-due,.biz-column-empty,
+.biz-summaries article>span,.biz-summaries small,.biz-table td>small,
+.biz-service-name,.biz-supplier-note>span,.biz-no-results,.biz-footnote,.biz-footer,
+.biz-form-help,.biz-file-input small,.biz-side-date{font-size:var(--type-meta);line-height:1.65}
+.biz-sidebar nav a,.biz-back,.biz-button,.biz-text-button,.biz-field,.biz-check,
+.biz-field-label,.biz-task-bottom select{font-size:var(--type-label)}
+.biz-sidebar nav a{color:var(--text-business)}
+.biz-sidebar nav a.active,.biz-text-button,.biz-contract a,.biz-footer a,
+.biz-file-input,.biz-existing-file,.biz-back{color:var(--text-action)}
+.biz-table th{font-size:var(--type-meta);font-weight:600}
+.biz-table td{font-size:var(--type-label)}
+.biz-button.secondary{color:var(--text-business)}
+.biz-status{color:var(--text-business);font-size:var(--type-meta)}
+.biz-status.status-paid,.biz-status.status-confirmed{color:#3e664d}
+.biz-status.status-partial,.biz-status.status-pending{color:#786023}
+.biz-status.status-declined{color:#845358}
+.biz-due.overdue,.biz-table .biz-overdue,.biz-form-error{color:#994a38}
+.biz-alert{color:#805037}
+.biz-brand small,.biz-eyebrow{color:var(--text-gold)}
+.biz-brand small,.biz-area-label{font-size:.6875rem}
+.checklist-intro,.checklist-meta,.checklist-results,.checklist-item-copy>p,
+.checklist-counts,.checklist-progress-copy>p{color:var(--text-business);font-size:var(--type-meta)}
+.checklist-ring>span>span,.checklist-categories>span,.checklist-categories>button,
+.checklist-categories b,.checklist-group>summary small,.checklist-group>summary>b,
+.checklist-item-copy h3>small,.checklist-row-actions select{
+ color:var(--text-business);font-size:var(--type-meta);
+}
+.checklist-categories>button.selected,.checklist-results a{color:var(--text-action)}
+.checklist-categories>span{font-size:.6875rem}
+.checklist-item-copy h3{font-size:var(--type-label)}
+.checklist-meta .overdue{color:#994a38}
+.checklist-row.status-done .checklist-item-copy h3{color:#3e664d}
+.checklist-row.status-doing .checklist-row-actions select{color:#786023}
+
+/* Entry form: placeholders and security notes are useful information too. */
+.ws-eyebrow,.ws-private,.ws-lock-note,.ws-login-form footer,
+.ws-login label,.ws-login-form footer span{color:var(--text-meta)}
+.ws-private,.ws-eyebrow{font-size:.6875rem;letter-spacing:1px}
+.ws-lock-note,.ws-login-form footer{font-size:var(--type-meta);line-height:1.65}
+.ws-login label{font-size:var(--type-label)}
+.ws-love-code{font-size:var(--type-meta)}
+
+.ledger-row>b,.financial-summary strong,.treasury-amount,.goal-values b,
+.biz-summaries strong{font-variant-numeric:tabular-nums}
+.ledger-row>b{text-align:right}
+.financial-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+.financial-summary>div{min-width:0}
+.green{color:#44664d}
+
+@media(max-width:1100px){.financial-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){
+ .top-right .sync-status{font-size:0}
+ .album-keeper{gap:12px}
+ .album-keeper p{font-size:var(--type-meta)}
+ .album-toolbar .segmented button,.photo small,.song-row>div>span,
+ .song-row .attach-audio .text-link{font-size:var(--type-meta)}
+ .main-goal-copy>.eyebrow,.album-keeper .eyebrow{font-size:.6875rem}
+ .financial-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .financial-summary>div{min-width:0;padding:18px 14px}
+ .financial-summary span{display:block;min-height:2.9em;line-height:1.45}
+ .financial-summary strong,.financial-summary>div:first-child strong{
+  font-size:clamp(1.375rem,6vw,1.625rem);letter-spacing:-.4px;
+  line-height:1.25;overflow-wrap:anywhere;
+ }
+}
+@media(max-width:360px){
+ .top-left:after{display:none}
+ .financial-summary{grid-template-columns:1fr}
+ .financial-summary span{min-height:0}
+ .financial-summary strong,.financial-summary>div:first-child strong{font-size:1.625rem}
+}

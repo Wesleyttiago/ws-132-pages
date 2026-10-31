@@ -15,6 +15,7 @@ import "./app/professional.css";
 import "./app/music.css";
 import "./app/companions.css";
 import "./app/motion.css";
+import "./app/readability.css";
 function Application(){
  const [state,setState]=useState<State|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const [route,setRoute]=useState(window.location.hash);
